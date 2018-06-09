@@ -41,7 +41,8 @@ class Segmenter:
 	    return pred.astype(np.uint8)
 
 # TODO: test a image from nexar camera
-path = "/home/gaoyang1/data/CityScapes/leftImg8bit/val/munster/munster_000115_000019_leftImg8bit.png"
+#path = "/home/gaoyang1/data/CityScapes/leftImg8bit/val/munster/munster_000115_000019_leftImg8bit.png"
+path = "/scratch/yang/aws_data/bdd100k/yolo_format/images/val/c8620a67-55f86ae2.jpg"
 img = Image.open(path)
 #print("raw size", img.shape)
 img = img.resize((1024, 512))

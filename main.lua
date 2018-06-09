@@ -34,6 +34,8 @@ if opt.dataset == 'cv' then
    data  = require 'data/loadCamVid'
 elseif opt.dataset == 'cs' then
    data = require 'data/loadCityscapes'
+elseif opt.dataset == 'mapillary' then
+   data = require 'data/loadMapillary'
 else
    error ("Dataset loader not found. (Available options are: cv/cs")
 end

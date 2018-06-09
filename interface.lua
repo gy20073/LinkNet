@@ -13,8 +13,8 @@ opt = opts.parse(arg)
 -- TODO: retrain the model on the mappilary data with lane markings
 -- TODO: test segmentation with other image size: different size doesn't work
 opt.devid = 1
-local trainMeanPath = "/home/gaoyang1/data/CityScapes/cache/512_1024/stat.t7"
-local pretrainedModel = "/home/gaoyang1/linknet/Final/model-cs-IoU.net"
+local trainMeanPath = "/data2/yang_cache/aws_data/linknet/stat.t7"
+local pretrainedModel = "/data2/yang_cache/aws_data/linknet/model-cs-IoU.net"
 opt.imHeight = 512
 opt.imWidth =  1024
 -- outside variables end
