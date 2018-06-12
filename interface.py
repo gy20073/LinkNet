@@ -2,7 +2,7 @@ import lutorpy as lua
 import numpy as np
 from PIL import Image
 from collections import defaultdict
-import time
+import time, os
 
 class Segmenter:
 	def init(self):
@@ -40,12 +40,17 @@ class Segmenter:
 
 	    return pred.astype(np.uint8)
 
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 # TODO: test a image from nexar camera
 #path = "/home/gaoyang1/data/CityScapes/leftImg8bit/val/munster/munster_000115_000019_leftImg8bit.png"
-path = "/scratch/yang/aws_data/bdd100k/yolo_format/images/val/c8620a67-55f86ae2.jpg"
+#path = "/scratch/yang/aws_data/bdd100k/yolo_format/images/val/c8620a67-55f86ae2.jpg"
+path = "/scratch/yang/aws_data/mapillary/validation/images/OYyFv3XcyrSla0sgF6JrEg.jpg"
+
 img = Image.open(path)
 #print("raw size", img.shape)
-img = img.resize((1024, 512))
+#img = img.resize((1024, 512))
+img = img.resize((768, 576))
 img = np.array(img)
 
 print("resized:", img.shape)

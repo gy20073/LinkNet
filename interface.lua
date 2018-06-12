@@ -17,6 +17,23 @@ local trainMeanPath = "/data2/yang_cache/aws_data/linknet/stat.t7"
 local pretrainedModel = "/data2/yang_cache/aws_data/linknet/model-cs-IoU.net"
 opt.imHeight = 512
 opt.imWidth =  1024
+local classes = {'Unlabeled', 'Road', 'Sidewalk', 'Building', 'Wall', 'Fence',
+                 'Pole', 'TrafficLight', 'TrafficSign', 'Vegetation', 'Terrain',
+                 'Sky', 'Person', 'Rider', 'Car', 'Truck',
+                 'Bus', 'Train', 'Motorcycle', 'Bicycle'}
+local conClasses = {'Road', 'Sidewalk', 'Building', 'Wall', 'Fence',
+                    'Pole', 'TrafficLight', 'TrafficSign', 'Vegetation', 'Terrain',
+                    'Sky', 'Person', 'Rider','Car', 'Truck',
+                    'Bus', 'Train', 'Motorcycle', 'Bicycle'} -- 19 classes
+
+-- Testing the Mapillary Model
+local trainMeanPath = "/scratch/yang/aws_data/mapillary/cache/576_768/stat.t7"
+local pretrainedModel = "/scratch/yang/aws_data/mapillary/linknet_output2/model-last.net"
+opt.imHeight = 576
+opt.imWidth =  768
+local classes = {'Ignored', 'Movable', 'Navigable', 'NoneNavigable', 'StaticLayout', 'Sky', 'Lane'}
+local conClasses = {'Movable', 'Navigable', 'NoneNavigable', 'StaticLayout', 'Sky', 'Lane'}
+
 -- outside variables end
 opt.batchSize = 1
 opt.nGPU = 1
@@ -31,14 +48,6 @@ require 'cudnn'
 require 'cunn'
 cutorch.setDevice(opt.devid)
 
-local classes = {'Unlabeled', 'Road', 'Sidewalk', 'Building', 'Wall', 'Fence',
-                 'Pole', 'TrafficLight', 'TrafficSign', 'Vegetation', 'Terrain',
-                 'Sky', 'Person', 'Rider', 'Car', 'Truck',
-                 'Bus', 'Train', 'Motorcycle', 'Bicycle'}
-local conClasses = {'Road', 'Sidewalk', 'Building', 'Wall', 'Fence',
-                    'Pole', 'TrafficLight', 'TrafficSign', 'Vegetation', 'Terrain',
-                    'Sky', 'Person', 'Rider','Car', 'Truck',
-                    'Bus', 'Train', 'Motorcycle', 'Bicycle'} -- 19 classes
 opt.dataClasses = classes
 opt.dataconClasses  = conClasses
 opt.datahistClasses = torch.Tensor(#classes):zero()
@@ -61,10 +70,11 @@ function segment(image)
 	x[1] = image
 	local y = model:forward(x)
 	-- y has a shape of 1*#class*H*W size. 
-
 	local y = y:transpose(2, 4):transpose(2, 3)
+
 	-- now has size 1*H*W*#class
 	y = y:reshape(y:numel()/y:size(4), #classes):sub(1, -1, 2, #opt.dataClasses)
+
 	local _, predictions = y:max(2)
 	predictions = predictions:view(opt.imHeight, opt.imWidth)
 	predictions =predictions:type('torch.IntTensor')

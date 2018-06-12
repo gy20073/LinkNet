@@ -179,8 +179,7 @@ else
         -- Load training labels:
         -- Load labels with same filename as input image.
         imgPath = string.gsub(imgPath, "images", "labels_converted")
-        imgPath = string.gsub(imgPath, ".jpg", ".png")
-
+        imgPath = imgPath:sub(1, -5) .. ".png"
 
         -- label image data are resized to be [1,nClasses] in [0 255] scale:
         local labelIn = image.load(imgPath, 1, 'byte')
@@ -225,7 +224,7 @@ else
         -- Load validation labels:
         -- Load labels with same filename as input image.
         imgPath = string.gsub(imgPath, "images", "labels_converted")
-        imgPath = string.gsub(imgPath, ".jpg", ".png")
+        imgPath = imgPath:sub(1, -5) .. ".png"
 
 
         -- load test labels:
