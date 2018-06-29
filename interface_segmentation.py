@@ -22,7 +22,7 @@ class Segmenter:
         self.width = 768
 
         # allow to import the interface.lua
-        os.environ["LUA_PATH"] += get_current_folder() + "/?.lua"
+        os.environ["LUA_PATH"] += ";" + get_current_folder() + "/?.lua"
         lua.LuaRuntime(zero_based_index=False)
         lua.execute("arg = {}")
         lua.execute('trainMeanPath="' + mean_path + '"')
@@ -34,10 +34,9 @@ class Segmenter:
 
     def visualize(self, pred):
         return getattr(self, self.viz_method)(pred)
-
+    
     def compute_logits(self, image):
         image = scipy.misc.imresize(image, [self.height, self.width], interp='bilinear')
-        print(image.shape)
         image = np.transpose(image, (2, 0, 1))
         image = image.astype(np.float32)
         image = image / 255.0
@@ -45,7 +44,6 @@ class Segmenter:
         image = torch.fromNumpyArray(image)
         out = self.segment_func(image)
         out = out.asNumpyArray()
-        print(out.shape)
         # out has shape H*W*#classes
         return out
 
@@ -55,7 +53,7 @@ class Segmenter:
 
         # convert to one hot encoding
         one_hot = np.zeros((argmax.size, logits.shape[2]), dtype=np.float32)
-        one_hot[np.arange(argmax.size), argmax[:]] = 1.0
+        one_hot[np.arange(argmax.size), argmax.ravel()] = 1.0
         one_hot = np.reshape(one_hot, logits.shape)
         return one_hot
 
@@ -67,18 +65,19 @@ class Segmenter:
         return self.visualize_logits(pred)
 
     def visualize_index(self, pred):
-        color = {0: [128, 64, 128], 1: [244, 35, 232], 2: [70, 70, 70],
-                 3: [102, 102, 156], 4: [190, 153, 153], 5: [153, 153, 153],
-                 6: [250, 170, 30], 7: [220, 220, 0], 8: [107, 142, 35],
-                 9: [152, 251, 152], 10: [70, 130, 180], 11: [220, 20, 60],
-                 12: [255, 0, 0], 13: [0, 0, 142], 14: [0, 0, 70],
-                 15: [0, 60, 100], 16: [0, 80, 100], 17: [0, 0, 230],
-                 18: [119, 11, 32]}
-        color = defaultdict(lambda: [0, 0, 0], color)
+        # 19*3
+        color=np.array([[128, 64, 128], [244, 35, 232], [70, 70, 70],
+                 [102, 102, 156], [190, 153, 153], [153, 153, 153],
+                 [250, 170, 30], [220, 220, 0], [107, 142, 35],
+                 [152, 251, 152], [70, 130, 180], [220, 20, 60],
+                 [255, 0, 0], [0, 0, 142], [0, 0, 70],
+                 [0, 60, 100], [0, 80, 100], [0, 0, 230], [119, 11, 32]], dtype=np.uint8)
+
         shape = pred.shape
+
         pred = pred.ravel()
-        # TODO: profile this and see whether this is a bottleneck
-        pred = np.asarray([color[i] for i in pred])
+        pred = np.array([color[pred, 0], color[pred, 1], color[pred, 2]])
+        pred = np.transpose(pred)
         pred = pred.reshape(shape[0], shape[1], 3)
 
         return pred.astype(np.uint8)
@@ -96,8 +95,8 @@ if __name__ == "__main__":
     seg = Segmenter(model_path="/scratch/yang/aws_data/mapillary/linknet_output2/model-last.net",
                     mean_path="/scratch/yang/aws_data/mapillary/cache/576_768/stat.t7",
                     GPU="1",
-                    compute_method="compute_logits",
-                    viz_method="visualize_logits")
+                    compute_method="compute_argmax",
+                    viz_method="visualize_argmax")
 
     paths = ["/scratch/yang/aws_data/mapillary/validation/images/0daE8mWxlKFT8kLBE5f12w.jpg"]
     start = time.time()
@@ -107,10 +106,8 @@ if __name__ == "__main__":
         id = path.split("/")[-1].split(".")[0]
         ori = Image.open(path)
         img = ori
-        # print("raw size", img.shape)
-        # img = img.resize((1024, 512))
-        img = np.array(img)
 
+        img = np.array(img)
         pred = seg.compute(img)
 
         colored = seg.visualize(pred)
