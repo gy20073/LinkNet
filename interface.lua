@@ -13,8 +13,9 @@ opt = opts.parse(arg)
 -- TODO: retrain the model on the mappilary data with lane markings
 -- TODO: test segmentation with other image size: different size doesn't work
 opt.devid = 1
-local trainMeanPath = "/data2/yang_cache/aws_data/linknet/stat.t7"
-local pretrainedModel = "/data2/yang_cache/aws_data/linknet/model-cs-IoU.net"
+-- Those two variables passed from outside
+--local trainMeanPath = "/data2/yang_cache/aws_data/linknet/stat.t7"
+--local pretrainedModel = "/data2/yang_cache/aws_data/linknet/model-cs-IoU.net"
 opt.imHeight = 512
 opt.imWidth =  1024
 local classes = {'Unlabeled', 'Road', 'Sidewalk', 'Building', 'Wall', 'Fence',
@@ -27,8 +28,9 @@ local conClasses = {'Road', 'Sidewalk', 'Building', 'Wall', 'Fence',
                     'Bus', 'Train', 'Motorcycle', 'Bicycle'} -- 19 classes
 
 -- Testing the Mapillary Model
-local trainMeanPath = "/scratch/yang/aws_data/mapillary/cache/576_768/stat.t7"
-local pretrainedModel = "/scratch/yang/aws_data/mapillary/linknet_output2/model-last.net"
+-- Those two variables passed from outside
+--local trainMeanPath = "/scratch/yang/aws_data/mapillary/cache/576_768/stat.t7"
+--local pretrainedModel = "/scratch/yang/aws_data/mapillary/linknet_output2/model-last.net"
 opt.imHeight = 576
 opt.imWidth =  768
 local classes = {'Ignored', 'Movable', 'Navigable', 'NoneNavigable', 'StaticLayout', 'Sky', 'Lane'}
@@ -69,16 +71,16 @@ function segment(image)
 	image:add(-trainMean:expandAs(image))
 	x[1] = image
 	local y = model:forward(x)
-	-- y has a shape of 1*#class*H*W size. 
+	-- y has a shape of 1*#class*H*W size.
 	local y = y:transpose(2, 4):transpose(2, 3)
 
 	-- now has size 1*H*W*#class
 	y = y:reshape(y:numel()/y:size(4), #classes):sub(1, -1, 2, #opt.dataClasses)
-
-	local _, predictions = y:max(2)
-	predictions = predictions:view(opt.imHeight, opt.imWidth)
-	predictions =predictions:type('torch.IntTensor')
-	return predictions
+	-- now has shape HW*(numclasses-1)
+	y = y:contiguous()
+	y = y:resize(opt.imHeight, opt.imWidth, #classes-1)
+	-- now has shape H*W*(#classes-1)
+	return y
 end
 
 return segment
