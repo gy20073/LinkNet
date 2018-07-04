@@ -1,8 +1,8 @@
 import lutorpy as lua
 import numpy as np
 from PIL import Image
-from collections import defaultdict
-import time, os, inspect, scipy.misc
+import time, os, inspect
+from common import resize_images
 
 
 def get_current_folder():
@@ -14,12 +14,14 @@ class Segmenter:
                  mean_path,
                  GPU="0",
                  compute_method="compute_logits",
-                 viz_method="visualize_logits"):
+                 viz_method="visualize_logits",
+                 batch_size=1):
         os.environ["CUDA_VISIBLE_DEVICES"] = GPU
         self.compute_method = compute_method
         self.viz_method = viz_method
         self.height = 576
         self.width = 768
+        self.batch_size = batch_size
 
         # allow to import the interface.lua
         os.environ["LUA_PATH"] += ";" + get_current_folder() + "/?.lua"
@@ -27,44 +29,50 @@ class Segmenter:
         lua.execute("arg = {}")
         lua.execute('trainMeanPath="' + mean_path + '"')
         lua.execute('pretrainedModel="' + model_path + '"')
+        lua.execute('batch_size=' + str(batch_size))
         self.segment_func = require('interface')
 
     def compute(self, image):
         return getattr(self, self.compute_method)(image)
 
-    def visualize(self, pred):
-        return getattr(self, self.viz_method)(pred)
-    
+    def visualize(self, pred, ibatch):
+        return getattr(self, self.viz_method)(pred, ibatch)
+
     def compute_logits(self, image):
-        image = scipy.misc.imresize(image, [self.height, self.width], interp='bilinear')
-        image = np.transpose(image, (2, 0, 1))
+        image = resize_images(image, [self.height, self.width])
+        # image shape B*H*W*C
+        image = np.transpose(image, (0, 3, 1, 2))
+        # has shape B*C*H*W
         image = image.astype(np.float32)
         image = image / 255.0
 
         image = torch.fromNumpyArray(image)
         out = self.segment_func(image)
         out = out.asNumpyArray()
-        # out has shape H*W*#classes
+        # out has shape batch*H*W*#classes
         return out
+
 
     def compute_argmax(self, image):
         logits = self.compute_logits(image)
-        argmax = np.argmax(logits, axis=2)
+        argmax = np.argmax(logits, axis=3)
 
         # convert to one hot encoding
-        one_hot = np.zeros((argmax.size, logits.shape[2]), dtype=np.float32)
+        one_hot = np.zeros((argmax.size, logits.shape[3]), dtype=np.float32)
         one_hot[np.arange(argmax.size), argmax.ravel()] = 1.0
         one_hot = np.reshape(one_hot, logits.shape)
         return one_hot
 
-    def visualize_logits(self, pred):
-        argmax = np.argmax(pred, axis=2)
-        return self.visualize_index(argmax)
+    def visualize_logits(self, pred, ibatch):
+        argmax = np.argmax(pred, axis=3)
+        return self.visualize_index(argmax, ibatch)
 
-    def visualize_argmax(self, pred):
-        return self.visualize_logits(pred)
+    def visualize_argmax(self, pred, ibatch):
+        return self.visualize_logits(pred, ibatch)
 
-    def visualize_index(self, pred):
+
+    def visualize_index(self, pred, ibatch):
+        pred = pred[ibatch]
         # 19*3
         color=np.array([[128, 64, 128], [244, 35, 232], [70, 70, 70],
                  [102, 102, 156], [190, 153, 153], [153, 153, 153],

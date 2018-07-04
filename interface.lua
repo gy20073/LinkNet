@@ -9,9 +9,6 @@ local opts = require 'opts'
 opt = opts.parse(arg)
 
 -- outside variables
--- TODO: have a global config file that points all models
--- TODO: retrain the model on the mappilary data with lane markings
--- TODO: test segmentation with other image size: different size doesn't work
 opt.devid = 1
 -- Those two variables passed from outside
 --local trainMeanPath = "/data2/yang_cache/aws_data/linknet/stat.t7"
@@ -37,7 +34,7 @@ local classes = {'Ignored', 'Movable', 'Navigable', 'NoneNavigable', 'StaticLayo
 local conClasses = {'Movable', 'Navigable', 'NoneNavigable', 'StaticLayout', 'Sky', 'Lane'}
 
 -- outside variables end
-opt.batchSize = 1
+opt.batchSize = batch_size
 opt.nGPU = 1
 
 -- nb of threads and fixed seed (for repeatable experiments)
@@ -58,6 +55,8 @@ opt.datahistClasses = torch.Tensor(#classes):zero()
 local trainMean = torch.load(trainMeanPath)
 -- from image wide mean to pixel wide mean
 trainMean = trainMean:mean(2):mean(3)
+trainMean = trainMean:resize(1,3,1,1)
+
 local model=torch.load(pretrainedModel)
 model:evaluate()
 local x = torch.Tensor(opt.batchSize, opt.channels, opt.imHeight, opt.imWidth)
@@ -69,17 +68,18 @@ function segment(image)
 	-- the image could be any size, a float array (0-1) with size 3*H*W
 	-- convert to float type, transpose
 	image:add(-trainMean:expandAs(image))
-	x[1] = image
+
+	x = x:copy(image)
 	local y = model:forward(x)
-	-- y has a shape of 1*#class*H*W size.
+	-- y has a shape of batch*#class*H*W size.
 	local y = y:transpose(2, 4):transpose(2, 3)
 
-	-- now has size 1*H*W*#class
+	-- now has size batch*H*W*#class
 	y = y:reshape(y:numel()/y:size(4), #classes):sub(1, -1, 2, #opt.dataClasses)
-	-- now has shape HW*(numclasses-1)
+	-- now has shape batchHW*(numclasses-1)
 	y = y:contiguous()
-	y = y:resize(opt.imHeight, opt.imWidth, #classes-1)
-	-- now has shape H*W*(#classes-1)
+	y = y:resize(opt.batchSize, opt.imHeight, opt.imWidth, #classes-1)
+	-- now has shape batch*H*W*(#classes-1)
 	return y
 end
 
