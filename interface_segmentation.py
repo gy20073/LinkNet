@@ -16,7 +16,7 @@ class Segmenter:
                  compute_method="compute_logits",
                  viz_method="visualize_logits",
                  batch_size=1,
-                 output_downsample_factor=1):
+                 output_downsample_factor=4):
         os.environ["CUDA_VISIBLE_DEVICES"] = GPU
         self.compute_method = compute_method
         self.viz_method = viz_method
@@ -39,7 +39,7 @@ class Segmenter:
 
     def visualize(self, pred, ibatch):
         return getattr(self, self.viz_method)(pred, ibatch)
-    
+
     def compute_logits(self, image):
         image = resize_images(image, [self.height, self.width])
         # image shape B*H*W*C
