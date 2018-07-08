@@ -62,23 +62,29 @@ model:evaluate()
 local x = torch.Tensor(opt.batchSize, opt.channels, opt.imHeight, opt.imWidth)
 x = x:cuda()
 
+trainMean = -trainMean:expandAs(x)
+trainMean = trainMean:cuda()
 
 -- interactive function here
-function segment(image)
-	-- the image could be any size, a float array (0-1) with size 3*H*W
-	-- convert to float type, transpose
-	image:add(-trainMean:expandAs(image))
-
+function segment(image, output_downsample_factor)
 	x = x:copy(image)
+	x:add(trainMean)
 	local y = model:forward(x)
+
 	-- y has a shape of batch*#class*H*W size.
+	-- downsample this output
+	local index_h = torch.range(1, opt.imHeight, output_downsample_factor):long()
+	local y = y:index(3, index_h)
+	local index_w = torch.range(1, opt.imWidth, output_downsample_factor):long()
+	local y = y:index(4, index_w)
+	-- finish downsampling
 	local y = y:transpose(2, 4):transpose(2, 3)
 
 	-- now has size batch*H*W*#class
 	y = y:reshape(y:numel()/y:size(4), #classes):sub(1, -1, 2, #opt.dataClasses)
 	-- now has shape batchHW*(numclasses-1)
 	y = y:contiguous()
-	y = y:resize(opt.batchSize, opt.imHeight, opt.imWidth, #classes-1)
+	y = y:resize(opt.batchSize, index_h:size()[1], index_w:size()[1], #classes-1)
 	-- now has shape batch*H*W*(#classes-1)
 	return y
 end
