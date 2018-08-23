@@ -76,12 +76,9 @@ class Segmenter:
     def visualize_index(self, pred, ibatch):
         pred = pred[ibatch]
         # 19*3
-        color=np.array([[128, 64, 128], [244, 35, 232], [70, 70, 70],
-                 [102, 102, 156], [190, 153, 153], [153, 153, 153],
-                 [250, 170, 30], [220, 220, 0], [107, 142, 35],
-                 [152, 251, 152], [70, 130, 180], [220, 20, 60],
-                 [255, 0, 0], [0, 0, 142], [0, 0, 70],
-                 [0, 60, 100], [0, 80, 100], [0, 0, 230], [119, 11, 32]], dtype=np.uint8)
+        # color coding from here:
+        # https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/helpers/labels.py
+        color=np.array([[0, 0, 142], [128, 64,128], [244, 35,232], [ 70, 70, 70], [70,130,180], [230,150,140]], dtype=np.uint8)
 
         shape = pred.shape
 

@@ -28,9 +28,7 @@ tesize = 2000
 --      Lane Markings
 --                 1          2         3            4                5               6      7
 local classes = {'Ignored', 'Movable', 'Navigable', 'NoneNavigable', 'StaticLayout', 'Sky', 'Lane'}
-local conClasses = {'Movable', 'Navigable', 'NoneNavigable', 'StaticLayout', 'Sky', 'Lane' }
-
--- this version merge 4 and 5 together, as 4
+local conClasses = {'Movable', 'Navigable', 'NoneNavigable', 'StaticLayout', 'Sky', 'Lane'}
 
 local nClasses = #classes
 
@@ -45,16 +43,16 @@ local classMap = {[-1] =  {1}, -- animal--bird
                   [3]  =  {4}, -- "construction--barrier--guard-rail"
                   [4]  =  {4}, -- "construction--barrier--other-barrier"
                   [5]  =  {4}, -- "construction--barrier--wall"
-                  [6]  =  {3}, -- "construction--flat--bike-lane"
-                  [7]  =  {3}, -- "construction--flat--crosswalk-plain"
+                  [6]  =  {4}, -- "construction--flat--bike-lane"
+                  [7]  =  {4}, -- "construction--flat--crosswalk-plain"
                   [8]  =  {4}, -- "construction--flat--curb-cut"
-                  [9]  =  {3}, -- "construction--flat--parking"
+                  [9]  =  {4}, -- "construction--flat--parking"
                   [10] =  {4}, -- "construction--flat--pedestrian-area"
-                  [11] =  {3}, -- "construction--flat--rail-track"
+                  [11] =  {4}, -- "construction--flat--rail-track"
                   [12] =  {3}, -- "construction--flat--road"
                   [13] =  {3}, -- "construction--flat--service-lane"
                   [14] =  {4}, -- "construction--flat--sidewalk"
-                  [15] =  {4}, -- "construction--structure--bridge"
+                  [15] =  {5}, -- "construction--structure--bridge"
                   [16] =  {5}, -- "construction--structure--building"
                   [17] =  {3}, -- "construction--structure--tunnel"
                   [18] =  {2}, -- "human--person"
@@ -68,28 +66,28 @@ local classMap = {[-1] =  {1}, -- animal--bird
                   [26] = {6}, -- "nature--sky"
                   [27] = {1}, -- "nature--snow" Not sure whether snow mountain or snow on road
                   [28] = {1}, -- "nature--terrain" Ignored due to rare appearance
-                  [29] =  {4}, -- "nature--vegetation"
+                  [29] =  {5}, -- "nature--vegetation"
                   [30] =  {4}, -- "nature--water"
-                  [31] = {4}, -- "object--banner"
-                  [32] = {4}, -- "object--bench"
-                  [33] = {4}, -- "object--bike-rack"
-                  [34]  =  {4}, -- "object--billboard"
+                  [31] = {5}, -- "object--banner"
+                  [32] = {5}, -- "object--bench"
+                  [33] = {5}, -- "object--bike-rack"
+                  [34]  =  {5}, -- "object--billboard"
                   [35]  =  {1}, -- "object--catch-basin"  Ignored since not frequent
                   [36]  =  {1}, -- "object--cctv-camera"  Ignored since not frequent
-                  [37]  =  {4}, -- "object--fire-hydrant"
-                  [38]  =  {4}, -- "object--junction-box"
-                  [39]  =  {4}, -- "object--mailbox"
+                  [37]  =  {5}, -- "object--fire-hydrant"
+                  [38]  =  {5}, -- "object--junction-box"
+                  [39]  =  {5}, -- "object--mailbox"
                   [40]  =  {3}, -- "object--manhole"
-                  [41]  =  {4}, -- "object--phone-booth"
+                  [41]  =  {5}, -- "object--phone-booth"
                   [42]  =  {1}, -- "object--pothole" Ignored, since not frequent
-                  [43] =  {4}, -- "object--street-light"
-                  [44] =  {4}, -- "object--support--pole"
-                  [45] =  {4}, -- "object--support--traffic-sign-frame"
-                  [46] =  {4}, -- "object--support--utility-pole"
-                  [47] =  {4}, -- "object--traffic-light"
-                  [48] =  {4}, -- "object--traffic-sign--back"
-                  [49] =  {4}, -- "object--traffic-sign--front"
-                  [50] =  {4}, -- "object--trash-can"
+                  [43] =  {5}, -- "object--street-light"
+                  [44] =  {5}, -- "object--support--pole"
+                  [45] =  {5}, -- "object--support--traffic-sign-frame"
+                  [46] =  {5}, -- "object--support--utility-pole"
+                  [47] =  {5}, -- "object--traffic-light"
+                  [48] =  {5}, -- "object--traffic-sign--back"
+                  [49] =  {5}, -- "object--traffic-sign--front"
+                  [50] =  {5}, -- "object--trash-can"
                   [51] =  {2}, -- "object--vehicle--bicycle"
                   [52] =  {1}, -- "object--vehicle--boat" Ignoring boat
                   [53] =  {2}, -- "object--vehicle--bus"
