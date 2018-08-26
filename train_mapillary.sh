@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CUDA_VISIBLE_DEVICES="1,2"
+export CUDA_VISIBLE_DEVICES="0,2"
 # have to train the model with multiple GPUs, otherwise, it will not save correctly
 th main.lua \
 --datapath /scratch/yang/aws_data/mapillary/ \
@@ -12,6 +12,6 @@ th main.lua \
 --pretrained /data2/yang_cache/aws_data/linknet/resnet-18.t7 \
 --imHeight 576 \
 --imWidth 768 \
---batchSize 8 \
+--batchSize 4 \
 --nGPU 2 \
 --plot
