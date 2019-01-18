@@ -16,7 +16,8 @@ class Segmenter:
                  compute_method="compute_logits",
                  viz_method="visualize_logits",
                  batch_size=1,
-                 output_downsample_factor=4):
+                 output_downsample_factor=4,
+                 attach_lane_color=False):
         os.environ["CUDA_VISIBLE_DEVICES"] = GPU
         self.compute_method = compute_method
         self.viz_method = viz_method
@@ -24,6 +25,7 @@ class Segmenter:
         self.width = 768
         self.batch_size = batch_size
         self.output_downsample_factor = output_downsample_factor
+        self.attach_lane_color = attach_lane_color
 
         # allow to import the interface.lua
         os.environ["LUA_PATH"] += ";" + get_current_folder() + "/?.lua"
@@ -42,6 +44,7 @@ class Segmenter:
 
     def compute_logits(self, image):
         image = resize_images(image, [self.height, self.width])
+        image_bak = image
         # image shape B*H*W*C
         image = np.transpose(image, (0, 3, 1, 2))
         # has shape B*C*H*W
@@ -52,6 +55,18 @@ class Segmenter:
         out = self.segment_func(image, self.output_downsample_factor)
         out = out.asNumpyArray()
         # out has shape batch*H*W*#classes
+
+        if self.attach_lane_color:
+            # compute the lane mask
+            assert(out.shape[3] == 6)
+            argmax = np.argmax(out, axis=3)
+            # now shape B*H*W
+            not_lane = (argmax != 5)
+            downsampled_images = image_bak[:, ::self.output_downsample_factor, ::self.output_downsample_factor, :]
+            downsampled_images[not_lane, :] = 0
+            downsampled_images = downsampled_images / 255.0
+            out = np.concatenate((out, downsampled_images), axis=3)
+
         return out
 
 
@@ -66,8 +81,17 @@ class Segmenter:
         return one_hot
 
     def visualize_logits(self, pred, ibatch):
-        argmax = np.argmax(pred, axis=3)
-        return self.visualize_index(argmax, ibatch)
+        if self.attach_lane_color:
+            argmax = np.argmax(pred[:,:,:,:-3], axis=3)
+            lane=pred[ibatch, :, :, -3:]
+            lane = np.uint8(lane * 255.0)
+            out = self.visualize_index(argmax, ibatch)
+            # out is a H * W * 3 image
+            out[argmax[ibatch]==5] = lane[argmax[ibatch]==5]
+        else:
+            argmax = np.argmax(pred, axis=3)
+            out = self.visualize_index(argmax, ibatch)
+        return out
 
     def visualize_argmax(self, pred, ibatch):
         return self.visualize_logits(pred, ibatch)
