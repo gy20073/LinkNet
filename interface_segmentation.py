@@ -103,6 +103,7 @@ class Segmenter:
         # color coding from here:
         # https://github.com/mcordts/cityscapesScripts/blob/master/cityscapesscripts/helpers/labels.py
         color=np.array([[0, 0, 142], [128, 64,128], [244, 35,232], [ 70, 70, 70], [70,130,180], [230,150,140]], dtype=np.uint8)
+        # meaning: car, road, sidewalk, building, sky, rail track
 
         shape = pred.shape
 
